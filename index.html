@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Proprietary Codec Check</title>
+    </head>
+    <body>
+      <p>Checking if Runtime is using proprietary codecs by loading video from a mp4 with h264 codec</p>
+      <p id="outcome"></p>
+      <video  src="trailer_simpsons.mp4" autoplay controls="controls"></video>
+      <script>
+        const video = document.querySelector('video')
+        video.addEventListener('error', ({target}) => {
+          if (target.error.code === target.error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+            document.querySelector('#outcome').textContent = 'Not using proprietary codecs, video emitted source not supported error event.'
+          } else {
+            document.querySelector('#outcome').textContent = `Unexpected error: ${target.error.code}`
+          }
+        })
+        video.addEventListener('playing', () => {
+          document.querySelector('#outcome').textContent = 'Using proprietary codecs, video started playing.'
+        })
+      </script>
+    </body>
+  </html>
