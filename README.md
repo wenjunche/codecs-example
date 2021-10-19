@@ -17,3 +17,8 @@ ffmpeg.exe  -y -i chrome2.mp4 -force_key_frames "expr:gte(t,n_forced*2)" -sc_thr
 ~~~
 
 which generates init.mp4 and fileSequence#.m4s.  Video duration seems to be off by 1 second, which should not matter for checking codecs support.  Hopefull someone can figure out the reason.
+
+### Helpful Links:
+
+* https://mozilla.github.io/webrtc-landing/pc_test.html
+* https://github.com/bitmovin/mse-demo
