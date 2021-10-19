@@ -3,8 +3,6 @@
 		"name": "Codecs Test",
 		"uuid": "Codecs Test",
 		"url": "http://localhost:9000/index.html",
-		"url2": "http://localhost:9000/webrtc/index.html",
-        "url3": "https://mozilla.github.io/webrtc-landing/pc_test.html",
 		"autoShow": true,
 		"frame": true,
 		"defaultCentered": true,
