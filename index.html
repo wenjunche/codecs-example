@@ -3,23 +3,120 @@
     <head>
       <meta charset="utf-8">
       <title>Proprietary Codec Check</title>
+
+      <script type="text/javascript">
+        const h264MimeType = 'video/mp4; codecs="avc1.4d400d, mp4a.40.2';
+        window.addEventListener("DOMContentLoaded", init);
+
+        function init() {
+          const video = document.querySelector('#video')
+          // canPlayType returns 'probably' if supported, '' if not
+          document.querySelector('#canPlayType').textContent = video.canPlayType(h264MimeType);
+          video.addEventListener('error', ({target}) => {
+            if (target.error.code === target.error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+              document.querySelector('#outcome').textContent = 'Proprietary codecs is not supported'
+            } else {
+              document.querySelector('#outcome').textContent = `Unexpected error: ${target.error.code}`
+            }
+          })
+          video.addEventListener('playing', () => {
+            document.querySelector('#outcome').textContent = 'Proprietary codecs is supported, video started playing.'
+          })
+          video.play();
+
+          document.querySelector('#mediaSource').textContent = window.MediaSource.isTypeSupported(h264MimeType);
+
+          // WebRTC Test
+          const codecs = RTCRtpSender.getCapabilities('video').codecs;
+          let rtcSupported = false;
+          codecs.forEach(c => {
+            if (c.mimeType === 'video/H264') {
+              rtcSupported = true;
+            }
+          });
+          document.querySelector('#webRTC').textContent = rtcSupported;
+
+          testWebExtesion();
+        }
+
+        function testWebExtesion() {
+          const baseUrl = 'http://localhost:9000/';
+          const initUrl = baseUrl + 'init.mp4';
+          const templateUrl = baseUrl + 'fileSequence$Number$.m4s';
+          let sourceBuffer;
+          let index = 0;
+          const numberOfChunks = 4;
+          const video2 = document.querySelector('#video2')
+          video2.addEventListener('error', ({target}) => {
+            console.error(target.error);
+          });
+          const mediaSource = new MediaSource();
+          video2.src = URL.createObjectURL(mediaSource);
+          mediaSource.addEventListener('sourceopen', onMediaSourceOpen);
+
+          function onMediaSourceOpen(e) {
+            sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.4d400d, mp4a.40.2');
+            sourceBuffer.addEventListener('updateend', nextSegment);
+            GET(initUrl, appendToBuffer);
+          }
+
+          function nextSegment() {
+            const url = templateUrl.replace('$Number$', index);
+            GET(url, appendToBuffer);
+            index++;
+            if (index > numberOfChunks) {
+              sourceBuffer.removeEventListener('updateend', nextSegment);
+              mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
+              mediaSource.endOfStream();
+              video2.play();
+            }
+          }
+
+          function appendToBuffer(videoChunk) {
+            if (videoChunk) {
+              sourceBuffer.appendBuffer(new Uint8Array(videoChunk));
+            }
+          }
+
+          function GET(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function(e) {
+              if (xhr.status != 200) {
+                console.warn('Unexpected status code ' + xhr.status + ' for ' + url);
+                return false;
+              }
+              callback(xhr.response);
+            };
+            xhr.send();
+          }
+        }
+
+
+      </script>
+
     </head>
     <body>
-      <p>Checking if Runtime is using proprietary codecs by loading video from a mp4 with h264 codec</p>
-      <p id="outcome"></p>
-      <video  src="trailer_simpsons.mp4" autoplay controls="controls"></video>
-      <script>
-        const video = document.querySelector('video')
-        video.addEventListener('error', ({target}) => {
-          if (target.error.code === target.error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
-            document.querySelector('#outcome').textContent = 'Not using proprietary codecs, video emitted source not supported error event.'
-          } else {
-            document.querySelector('#outcome').textContent = `Unexpected error: ${target.error.code}`
-          }
-        })
-        video.addEventListener('playing', () => {
-          document.querySelector('#outcome').textContent = 'Using proprietary codecs, video started playing.'
-        })
-      </script>
+      <div>
+        <p>Checking if Runtime supports proprietary codecs by calling window.MediaSource.isTypeSupported:<span id="mediaSource"></span></p>
+      </div>
+      <div>
+        <p>Checking if Runtime supports proprietary codecs by calling HTMLMediaElement.canPlayType:<span id="canPlayType"></span></p>
+      </div>
+      <div>
+        <p>Checking if Runtime supports proprietary codecs by loading video from a mp4 with h264 codec</p>
+        <p id="outcome"></p>
+        <video id="video" src="chrome.mp4" width="500" height="250" autoplay muted controls="controls"></video>  
+      </div>
+      <div>
+        <p>Checking if Runtime supports proprietary codecs by loading video from a mp4 with h264 codec with Media Extension API</p>
+        <video id="video2" width="500" height="250" autoplay muted controls="controls">
+        </video>
+      </div>
+      <div>
+        <p>Checking if Runtime supports proprietary codecs by calling RTCRtpSender.getCapabilities:<span id="webRTC"></span></p>
+      </div>
+
     </body>
   </html>
