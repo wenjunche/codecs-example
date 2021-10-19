@@ -8,8 +8,6 @@ leftVideo.addEventListener('canplay', () => {
   const fps = 0;
   if (leftVideo.captureStream) {
     stream = leftVideo.captureStream(fps);
-  } else if (leftVideo.mozCaptureStream) {
-    stream = leftVideo.mozCaptureStream(fps);
   } else {
     console.error('Stream capture is not supported');
     stream = null;
