@@ -12,8 +12,8 @@
 		"transparent": false,
 		"saveWindowState": false,
 		"waitForPageLoad": false,
-		"defaultHeight": 830,
-		"defaultWidth": 800,
+		"defaultHeight": 870,
+		"defaultWidth": 820,
 		"backgroundThrottling": true,
 		"nonPersistent": false,
         "permissions": {

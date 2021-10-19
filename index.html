@@ -48,14 +48,27 @@
           const numberOfChunks = 4;
           const video2 = document.querySelector('#video2')
           video2.addEventListener('error', ({target}) => {
-            console.error(target.error);
+            if (target.error.code === target.error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+              document.querySelector('#outcome2').textContent = 'Proprietary codecs is not supported';
+            } else {
+              document.querySelector('#outcome2').textContent = `Unexpected error: ${target.error.code}`;
+            }
           });
+          video2.addEventListener('playing', () => {
+            document.querySelector('#outcome2').textContent = 'Proprietary codecs is supported, video started playing.';
+          });
+
           const mediaSource = new MediaSource();
           video2.src = URL.createObjectURL(mediaSource);
           mediaSource.addEventListener('sourceopen', onMediaSourceOpen);
 
           function onMediaSourceOpen(e) {
-            sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.4d400d, mp4a.40.2');
+            try {
+              sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.4d400d, mp4a.40.2');
+            } catch (err) {
+              document.querySelector('#outcome2').textContent = `${err.message}`;
+              return;
+            }
             sourceBuffer.addEventListener('updateend', nextSegment);
             GET(initUrl, appendToBuffer);
           }
@@ -111,6 +124,7 @@
       </div>
       <div>
         <p>Checking if Runtime supports proprietary codecs by loading video from a mp4 with h264 codec with Media Extension API</p>
+        <p id="outcome2"></p>
         <video id="video2" width="500" height="250" autoplay muted controls="controls">
         </video>
       </div>
